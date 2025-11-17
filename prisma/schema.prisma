@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(uuid()) @map("_id")
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(USER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events    Event[]  @relation("UserEvents")
+}
+
+model Event {
+  id          String   @id @default(uuid()) @map("_id")
+
+  title       String
+  description String?
+  location    String
+
+  // Use these to compute upcoming / ongoing / past
+  startAt     DateTime
+  endAt       DateTime
+
+  bannerUrl   String?
+  category    String?
+  isPublic    Boolean @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Who created the event (typically an admin)
+  createdById String
+  createdBy   User     @relation("UserEvents", fields: [createdById], references: [id])
+}
